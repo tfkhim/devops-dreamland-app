@@ -1,0 +1,60 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      hasNextVersion: ${{ steps.get_next_version.outputs.hasNextVersion }}
+      version: ${{ steps.get_next_version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get next version
+        id: get_next_version
+        uses: thenativeweb/get-next-version@main
+
+  push:
+    needs: version
+    if: ${{ needs.version.outputs.hasNextVersion }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build docker image
+        run: ./gradlew --no-daemon dockerBuild
+
+      - name: Log in to GitHub container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}:${{ needs.version.outputs.version }}
+          docker tag app:latest "${IMAGE}"
+          docker push "${IMAGE}"
+
+      - name: Tag commit with version
+        run: |
+          TAG_NAME="${{ needs.version.outputs.version }}"
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
+
+      - name: Docker logout
+        run: docker logout
