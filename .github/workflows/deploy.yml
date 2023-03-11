@@ -23,7 +23,7 @@ jobs:
 
   push:
     needs: version
-    if: ${{ needs.version.outputs.hasNextVersion }}
+    if: needs.version.outputs.hasNextVersion == 'true'
     runs-on: ubuntu-latest
 
     permissions:
