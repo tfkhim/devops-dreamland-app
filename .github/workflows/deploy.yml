@@ -58,3 +58,29 @@ jobs:
 
       - name: Docker logout
         run: docker logout
+
+  deploy:
+    needs: [version, push]
+    if: needs.version.outputs.hasNextVersion == 'true'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout of config repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'tfkhim/devops-dreamland-config'
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+
+      - name: Update demo-app version
+        run: sed -i -r 's/(image:.*devops-dreamland-app:)[.a-zA-Z0-9]+/\1${{ needs.version.outputs.version }}/' apps/demo-app/deployment.yaml
+
+      - name: Push new version
+        run: |
+          git add apps/demo-app/deployment.yaml
+          git config user.email '${{ vars.GIT_USER_EMAIL }}'
+          git config user.name '${{ vars.GIT_USER_NAME }}'
+          git commit -m 'ops(demo-app): deploy version ${{ needs.version.outputs.version }}'
+          git push
