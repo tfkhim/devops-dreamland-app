@@ -25,4 +25,4 @@ jobs:
 
       - name: Check for conventional commit style
         working-directory: ./dev_tooling
-        run: npx commitlint --from $(git merge-base main HEAD)
+        run: npx commitlint --from=origin/main
