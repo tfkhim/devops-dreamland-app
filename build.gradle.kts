@@ -29,6 +29,9 @@ dependencies {
 
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
 
 application {
     mainClass.set("com.github.tfkhim.devopsdreamland.ApplicationKt")
