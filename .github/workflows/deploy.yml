@@ -64,9 +64,6 @@ jobs:
     if: needs.version.outputs.hasNextVersion == 'true'
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout of config repository
         uses: actions/checkout@v3
