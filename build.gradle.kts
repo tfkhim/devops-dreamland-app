@@ -6,7 +6,7 @@ plugins {
     id("io.micronaut.application") version "3.7.3"
 }
 
-version = "0.1"
+version = project.properties.get("projectVersion")
 group = "com.github.tfkhim.devopsdreamland"
 
 val kotlinVersion=project.properties.get("kotlinVersion")
