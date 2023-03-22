@@ -19,7 +19,16 @@ jobs:
 
       - name: Get next version
         id: get_next_version
-        uses: thenativeweb/get-next-version@main
+        run: |
+          CURRENT="$(docker run --rm -v $PWD:/tmp --workdir /tmp ghcr.io/caarlos0/svu current --strip-prefix)"
+          NEXT="$(docker run --rm -v $PWD:/tmp --workdir /tmp ghcr.io/caarlos0/svu next --strip-prefix)"
+          if [ "${CURRENT}" = "${NEXT}" ]; then
+            HAS_NEXT_VERSION="false"
+          else
+            HAS_NEXT_VERSION="true"
+          fi
+          echo "version=${NEXT}" >> "${GITHUB_OUTPUT}"
+          echo "hasNextVersion=${HAS_NEXT_VERSION}" >> "${GITHUB_OUTPUT}"
 
   push:
     needs: version
