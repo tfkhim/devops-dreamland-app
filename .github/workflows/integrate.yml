@@ -1,0 +1,57 @@
+name: integrate
+
+on:
+  workflow_run:
+    workflows:
+      - build
+    types:
+      - completed
+    branches:
+      - ready/**
+
+jobs:
+  merge_to_main:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: Check that a fast forward merge is possible
+        run: git merge-base --is-ancestor origin/main HEAD
+
+      - name: Check that history is linear
+        run: |
+          NUM_MERGE_COMMITS="$(git rev-list --merges --count origin/main..HEAD)"
+          if [ "${NUM_MERGE_COMMITS}" -ne 0 ]; then
+            echo "::error::History contains merge commits"
+            exit 1
+          fi
+
+      - name: Merge branch
+        run: |
+          NUM_COMMITS="$(git rev-list --count origin/main..HEAD)"
+          git switch main
+          if [ "${NUM_COMMITS}" -gt 1 ]; then
+            echo "::notice::Create a merge commit for multiple commits"
+            git config user.email '${{ vars.GIT_USER_EMAIL }}'
+            git config user.name '${{ vars.GIT_USER_NAME }}'
+            git merge --no-ff --no-edit "${{ github.event.workflow_run.head_branch }}"
+          else
+            echo "::notice::Using fast forward for a single commit"
+            git merge --ff-only "${{ github.event.workflow_run.head_branch }}"
+          fi
+
+      - name: Push
+        run: git push origin
+
+      - name: Delete merged branch
+        run: git push origin --delete "${{ github.event.workflow_run.head_branch }}"
