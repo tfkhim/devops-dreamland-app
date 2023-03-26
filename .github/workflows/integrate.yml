@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      actions: write
       contents: write
 
     steps:
@@ -55,3 +56,8 @@ jobs:
 
       - name: Delete merged branch
         run: git push origin --delete "${{ github.event.workflow_run.head_branch }}"
+
+      - name: Trigger the deployment workflow
+        run: gh workflow run deploy.yml -r main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
