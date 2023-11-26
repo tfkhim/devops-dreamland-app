@@ -44,20 +44,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+
+      - name: Install required Nix packages
+        run: nix develop --command true
 
       - name: Update project version
         run: |
           VERSION="${{ needs.version.outputs.version }}"
-          sed -i -r "s/(projectVersion=).*/\1${VERSION}/" gradle.properties
-          git add gradle.properties
+          nix develop --command cargo set-version "${VERSION}"
+          git add Cargo.toml Cargo.lock
           git config user.email '${{ vars.GIT_USER_EMAIL }}'
           git config user.name '${{ vars.GIT_USER_NAME }}'
           git commit -m "build: update project version to ${VERSION}"
 
-      - name: Build docker image
-        run: ./gradlew dockerBuild
+      - name: Build image
+        run: nix build
 
       - name: Log in to GitHub container registry
         uses: docker/login-action@v2
@@ -69,7 +72,7 @@ jobs:
       - name: Push image
         run: |
           IMAGE=ghcr.io/${{ github.repository }}:${{ needs.version.outputs.version }}
-          docker tag app:latest "${IMAGE}"
+          nix develop --command load-image-with-tag "${IMAGE}"
           docker push "${IMAGE}"
 
       - name: Tag commit and push changes

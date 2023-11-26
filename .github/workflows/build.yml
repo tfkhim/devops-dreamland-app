@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  quality-assurance:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,23 +14,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: 'dev_tooling/package-lock.json'
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
 
-      - name: Install dependencies
-        working-directory: ./dev_tooling
-        run: npm ci
+      - name: Install required Nix packages
+        run: nix develop --command true
 
       - name: Check for conventional commit style
-        working-directory: ./dev_tooling
-        run: npx commitlint --from=origin/main
+        run: nix develop --command cog check origin/main..HEAD
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: Check formatting
+        run: nix develop --command chkfmt
 
-      - name: Run test suite
-        run: ./gradlew test
+      - name: Lint
+        run: nix develop --command lint
+
+      - name: Test
+        run: nix develop --command cargo test
+
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+
+      - name: Install required Nix packages
+        run: nix develop --command true
+
+      - name: Build image
+        run: nix build
