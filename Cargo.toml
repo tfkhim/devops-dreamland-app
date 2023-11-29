@@ -1,6 +1,6 @@
 [package]
 name = "devops-dreamland-app"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "A playground to try out DevOps processes and technologies"
 authors = ["Thomas Himmelstoss <9889638+tfkhim@users.noreply.github.com>"]
