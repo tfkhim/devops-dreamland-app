@@ -25,10 +25,10 @@
 
       forSupportedSystems = generator:
         let
-          generateForSystem = system: generator {
+          generateForSystem = system: generator rec {
             inherit system;
             pkgs = nixpkgs.legacyPackages.${system};
-            craneLib = crane.lib.${system};
+            craneLib = crane.mkLib pkgs;
           };
         in
         nixpkgs.lib.genAttrs supportedSystems generateForSystem;
