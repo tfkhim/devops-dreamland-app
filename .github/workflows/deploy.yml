@@ -14,7 +14,7 @@ jobs:
       version: ${{ steps.get_next_version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Nix
         uses: cachix/install-nix-action@v22
@@ -91,7 +91,7 @@ jobs:
 
     steps:
       - name: Checkout of config repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'tfkhim/devops-dreamland-config'
           token: ${{ secrets.CONFIG_REPO_TOKEN }}
