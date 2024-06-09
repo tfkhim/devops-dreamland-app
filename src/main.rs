@@ -13,7 +13,7 @@ async fn main() -> io::Result<()> {
     let user_repository = Arc::new(UserRepository::new());
 
     let app = Router::new()
-        .route("/greetings/:name", get(greetings_handler))
+        .route("/greetings/:user_id", get(greetings_handler))
         .with_state(user_repository);
 
     let listener = TcpListener::bind("127.0.0.1:8080").await?;

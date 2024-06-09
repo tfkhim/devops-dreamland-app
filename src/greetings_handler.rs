@@ -1,14 +1,37 @@
 use std::sync::Arc;
 
 use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use thiserror::Error;
 
 use crate::user_repository::UserRepository;
 
 pub async fn greetings_handler<'de>(
-    Path(name): Path<String>,
+    Path(user_id): Path<String>,
     State(user_repository): State<Arc<UserRepository>>,
-) -> String {
-    let display_name = user_repository.get_display_name_for_username(&name).await;
+) -> Result<String, GreetingError> {
+    user_repository
+        .get_display_name_by_id(&user_id)
+        .await
+        .ok_or(GreetingError::UnknownUser { user_id })
+        .map(|display_name| format!("Hello, {display_name}!"))
+}
 
-    format!("Hello, {}!", display_name.unwrap_or("World".to_owned()))
+#[derive(Error, Debug)]
+pub enum GreetingError {
+    #[error("Unknown user with id '{user_id}'")]
+    UnknownUser { user_id: String },
+}
+
+impl IntoResponse for GreetingError {
+    fn into_response(self) -> Response {
+        let message = self.to_string();
+
+        let status = match self {
+            Self::UnknownUser { .. } => StatusCode::NOT_FOUND,
+        };
+
+        (status, message).into_response()
+    }
 }

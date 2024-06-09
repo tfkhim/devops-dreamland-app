@@ -21,9 +21,9 @@ impl UserRepository {
         }
     }
 
-    pub async fn get_display_name_for_username(&self, username: &str) -> Option<String> {
+    pub async fn get_display_name_by_id(&self, user_id: &str) -> Option<String> {
         self.users
-            .get(username)
+            .get(user_id)
             .map(|user_data| user_data.display_name.clone())
     }
 }
