@@ -1,17 +1,22 @@
-use std::io;
+use std::{io, sync::Arc};
 
-use axum::{extract::Path, routing::get, Router};
+mod greetings_handler;
+mod user_repository;
+
+use axum::{routing::get, Router};
+use greetings_handler::greetings_handler;
 use tokio::net::TcpListener;
+use user_repository::UserRepository;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let app = Router::new().route("/greetings/:name", get(greet));
+    let user_repository = Arc::new(UserRepository::new());
+
+    let app = Router::new()
+        .route("/greetings/:name", get(greetings_handler))
+        .with_state(user_repository);
 
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
     axum::serve(listener, app).await
-}
-
-async fn greet<'de>(Path(name): Path<String>) -> String {
-    format!("Hello, {}!", name)
 }
