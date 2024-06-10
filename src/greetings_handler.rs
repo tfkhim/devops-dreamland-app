@@ -11,9 +11,9 @@ pub async fn greetings_handler<'de>(
     Path(user_id): Path<String>,
     State(user_repository): State<Arc<UserRepository>>,
 ) -> Result<String, GreetingError> {
-    user_repository
-        .get_display_name_by_id(&user_id)
-        .await
+    let display_name = user_repository.get_display_name_by_id(&user_id).await?;
+
+    display_name
         .ok_or(GreetingError::UnknownUser { user_id })
         .map(|display_name| format!("Hello, {display_name}!"))
 }
@@ -22,16 +22,20 @@ pub async fn greetings_handler<'de>(
 pub enum GreetingError {
     #[error("Unknown user with id '{user_id}'")]
     UnknownUser { user_id: String },
+    #[error("An error occurred in a repository method")]
+    RepositoryError(#[from] std::io::Error),
 }
 
 impl IntoResponse for GreetingError {
     fn into_response(self) -> Response {
-        let message = self.to_string();
-
-        let status = match self {
-            Self::UnknownUser { .. } => StatusCode::NOT_FOUND,
+        let status_message = match self {
+            Self::UnknownUser { .. } => (StatusCode::NOT_FOUND, self.to_string()),
+            Self::RepositoryError(..) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal Server Error".to_owned(),
+            ),
         };
 
-        (status, message).into_response()
+        status_message.into_response()
     }
 }

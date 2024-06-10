@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::ErrorKind};
 
 pub struct UserRepository {
     users: HashMap<String, UserData>,
@@ -21,10 +21,20 @@ impl UserRepository {
         }
     }
 
-    pub async fn get_display_name_by_id(&self, user_id: &str) -> Option<String> {
-        self.users
+    pub async fn get_display_name_by_id(
+        &self,
+        user_id: &str,
+    ) -> Result<Option<String>, std::io::Error> {
+        if user_id == "error" {
+            return Err(ErrorKind::ConnectionReset.into());
+        }
+
+        let display_name = self
+            .users
             .get(user_id)
-            .map(|user_data| user_data.display_name.clone())
+            .map(|user_data| user_data.display_name.clone());
+
+        Ok(display_name)
     }
 }
 
