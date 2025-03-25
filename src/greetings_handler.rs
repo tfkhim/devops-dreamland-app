@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::user_repository::UserRepository;
 
-pub async fn greetings_handler<'de>(
+pub async fn greetings_handler(
     Path(user_id): Path<String>,
     State(user_repository): State<Arc<UserRepository>>,
 ) -> Result<String, GreetingError> {
