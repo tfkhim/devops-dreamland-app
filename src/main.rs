@@ -3,7 +3,7 @@ use std::{io, sync::Arc};
 mod greetings_handler;
 mod user_repository;
 
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use greetings_handler::greetings_handler;
 use tokio::net::TcpListener;
 use user_repository::UserRepository;
