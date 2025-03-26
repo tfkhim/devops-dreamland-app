@@ -4,13 +4,17 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use thiserror::Error;
+use tracing::{info, instrument};
 
 use crate::user_repository::UserRepository;
 
+#[instrument(err, skip_all)]
 pub async fn greetings_handler(
     Path(user_id): Path<String>,
     State(user_repository): State<Arc<UserRepository>>,
 ) -> Result<String, GreetingError> {
+    info!("Searching user: {}", user_id);
+
     let display_name = user_repository.get_display_name_by_id(&user_id).await?;
 
     display_name

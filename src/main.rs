@@ -1,22 +1,29 @@
-use std::{io, sync::Arc};
-
-mod greetings_handler;
-mod user_repository;
-
 use axum::{Router, routing::get};
 use greetings_handler::greetings_handler;
-use tokio::net::TcpListener;
+use init::telemetry::TelemetryLifecycle;
+use init::{InitResult, start_server};
+use std::sync::Arc;
 use user_repository::UserRepository;
 
+mod greetings_handler;
+mod init;
+mod user_repository;
+
 #[tokio::main]
-async fn main() -> io::Result<()> {
+async fn main() -> InitResult<()> {
+    let telemetry_lifecycle = TelemetryLifecycle::setup()?;
+
+    start_server(build_app()).await?;
+
+    telemetry_lifecycle.shutdown()?;
+
+    Ok(())
+}
+
+fn build_app() -> Router {
     let user_repository = Arc::new(UserRepository::new());
 
-    let app = Router::new()
+    Router::new()
         .route("/greetings/{user_id}", get(greetings_handler))
-        .with_state(user_repository);
-
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
-
-    axum::serve(listener, app).await
+        .with_state(user_repository)
 }
