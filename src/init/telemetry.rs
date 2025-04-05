@@ -43,7 +43,7 @@ impl TelemetryLifecycle {
     }
 
     fn init_opentelementry_tracing_subscriber(&self) -> InitResult<()> {
-        let tracer = self.provider.tracer("global");
+        let tracer = self.provider.tracer("app");
 
         let open_telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
 
