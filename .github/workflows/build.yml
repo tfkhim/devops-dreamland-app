@@ -41,8 +41,5 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v22
 
-      - name: Install required Nix packages
-        run: nix develop --command true
-
       - name: Build image
-        run: nix build
+        run: nix build .#image
