@@ -10,11 +10,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "github:ipetkov/crane";
   };
 
   outputs = { self, nixpkgs, crane, ... }:
@@ -83,14 +79,10 @@
             cargo clippy --all-targets -- --deny warnings
           '';
 
-          loadImage =
-            let
-              image = self.packages.${system}.image;
-            in
-            pkgs.writeShellScriptBin "load-image-with-tag" ''
-              ${image} | docker load
-              docker tag "${imageName}:${image.imageTag}" "''${1:-app:latest}"
-            '';
+          loadImage = pkgs.writeShellScriptBin "load-image-with-tag" ''
+            IMAGE_LOADER_SCRIPT=$(nix build --print-out-paths .#image)
+            $IMAGE_LOADER_SCRIPT --repo_tag "''${1:-app:latest}" | docker load
+          '';
         in
         {
           default = craneLib.devShell {
